@@ -31,18 +31,22 @@ export default function ClientDetail() {
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
 
+  const [exerciseOptions, setExerciseOptions] = useState([]);
+  const [selectedExercise, setSelectedExercise] = useState('');
+  const [strengthLogs, setStrengthLogs] = useState([]);
+
   async function load() {
     if (!id) return;
-    const [profileRes, progressRes, photoRes, workoutsRes] = await Promise.all([
+    const [profileRes, progressRes, photoRes, workoutsRes, exLogsRes] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', id).single(),
       supabase.from('progress_logs').select('*').eq('client_id', id).order('log_date'),
       supabase.from('transformation_photos').select('*').eq('client_id', id).order('taken_date', { ascending: false }).limit(9),
       supabase.from('client_workouts').select('scheduled_date, completed').eq('client_id', id),
+      supabase.from('exercise_logs').select('*, exercises(id, name)').eq('client_id', id).order('log_date'),
     ]);
     setClient(profileRes.data);
     setProgress(progressRes.data || []);
 
-    // Transformation photos live in a private bucket — sign each URL for this viewer.
     const withUrls = await Promise.all((photoRes.data || []).map(async (p) => {
       const { data } = await supabase.storage.from('transformation-photos').createSignedUrl(p.photo_url, 3600);
       return { ...p, signedUrl: data?.signedUrl };
@@ -52,6 +56,12 @@ export default function ClientDetail() {
     const rows = workoutsRes.data || [];
     const done = rows.filter((r) => r.completed).length;
     setWorkoutStats({ done, total: rows.length, rate: rows.length ? Math.round((done / rows.length) * 100) : 0 });
+
+    const exLogs = exLogsRes.data || [];
+    const uniqueExercises = [...new Map(exLogs.map((l) => [l.exercise_id, l.exercises])).values()];
+    setExerciseOptions(uniqueExercises);
+    if (uniqueExercises.length && !selectedExercise) setSelectedExercise(uniqueExercises[0].id);
+    setStrengthLogs(exLogs);
   }
   useEffect(() => { load(); }, [id]);
 
@@ -73,6 +83,10 @@ export default function ClientDetail() {
   const change30 = changeOverWindow(progress, 30);
   const change60 = changeOverWindow(progress, 60);
   const change90 = changeOverWindow(progress, 90);
+
+  const strengthData = strengthLogs
+    .filter((l) => l.exercise_id === selectedExercise)
+    .map((l) => ({ date: new Date(l.log_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }), weight: l.weight_kg }));
 
   return (
     <main className="dash">
@@ -116,15 +130,27 @@ export default function ClientDetail() {
             </div>
 
             <div className="widget">
-              <h3>Progress History</h3>
-              {progress.length ? [...progress].reverse().slice(0, 10).map((p) => (
-                <div className="row" key={p.id}>
-                  <div><b>{p.weight_kg} kg</b><small>{new Date(p.log_date).toLocaleDateString()}</small></div>
-                  <small className="muted">
-                    {p.waist_cm ? `Waist ${p.waist_cm}cm` : ''} {p.chest_cm ? `· Chest ${p.chest_cm}cm` : ''}
-                  </small>
-                </div>
-              )) : <p className="muted">No progress logged by this client yet.</p>}
+              <h3>Strength Progression</h3>
+              {exerciseOptions.length ? (
+                <>
+                  <select value={selectedExercise} onChange={(e) => setSelectedExercise(e.target.value)} style={{ marginBottom: 14, padding: 10, borderRadius: 8, border: '1px solid var(--line)', background: 'var(--panel)', color: '#fff', width: '100%' }}>
+                    {exerciseOptions.map((ex) => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
+                  </select>
+                  {strengthData.length >= 2 ? (
+                    <div style={{ width: '100%', height: 220 }}>
+                      <ResponsiveContainer>
+                        <LineChart data={strengthData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
+                          <XAxis dataKey="date" stroke="#666" fontSize={11} />
+                          <YAxis stroke="#666" fontSize={11} domain={['dataMin - 5', 'dataMax + 5']} />
+                          <Tooltip contentStyle={{ background: '#0a0a0a', border: '1px solid #232323' }} />
+                          <Line type="monotone" dataKey="weight" stroke="#34d399" strokeWidth={2} dot={{ r: 3 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : <p className="muted">Needs at least 2 logged sessions of this exercise for a graph.</p>}
+                </>
+              ) : <p className="muted">This client hasn't logged any exercise performance yet.</p>}
             </div>
 
             <div className="widget">

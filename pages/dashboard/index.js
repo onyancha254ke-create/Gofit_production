@@ -63,6 +63,7 @@ export default function ClientDashboard() {
         <p className="eyebrow" style={{ marginBottom: 20 }}>MY GOFIT</p>
         <button className="on">Dashboard</button>
         <Link href="/progress">Progress</Link>
+        <Link href="/workout/log">Log Workout</Link>
         <Link href="/booking">Book a Session</Link>
         <Link href="/shop">Shop</Link>
         <Link href="/account">Account</Link>
@@ -81,6 +82,11 @@ export default function ClientDashboard() {
                   <p style={{ fontSize: 20, fontWeight: 700, margin: '0 0 6px' }}>{workout.workouts?.title}</p>
                   <p className="muted" style={{ marginBottom: 16 }}>{workout.workouts?.notes}</p>
                   <span className="status">{workout.completed ? 'Completed' : 'Pending'}</span>
+                  {!workout.completed && (
+                    <div style={{ marginTop: 14 }}>
+                      <Link href="/workout/log" style={{ color: 'var(--accent)', fontSize: 12, fontWeight: 600 }}>Log this workout →</Link>
+                    </div>
+                  )}
                 </>
               ) : <p className="muted">No workout scheduled for today. Rest day, or check with your trainer.</p>}
             </div>

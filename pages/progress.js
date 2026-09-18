@@ -24,6 +24,8 @@ export default function Progress() {
   const [uid, setUid] = useState(null);
   const [logs, setLogs] = useState([]);
   const [photos, setPhotos] = useState([]); // [{...row, signedUrl}]
+  const [exerciseLogs, setExerciseLogs] = useState([]);
+  const [selectedExercise, setSelectedExercise] = useState('');
   const [form, setForm] = useState({ weight_kg: '', waist_cm: '', chest_cm: '', hips_cm: '', arm_cm: '', notes: '' });
   const [file, setFile] = useState(null);
   const [label, setLabel] = useState('front');
@@ -35,11 +37,13 @@ export default function Progress() {
     if (!session) return;
     setUid(session.user.id);
 
-    const [logRes, photoRes] = await Promise.all([
+    const [logRes, photoRes, exLogRes] = await Promise.all([
       supabase.from('progress_logs').select('*').eq('client_id', session.user.id).order('log_date'),
       supabase.from('transformation_photos').select('*').eq('client_id', session.user.id).order('taken_date', { ascending: false }),
+      supabase.from('exercise_logs').select('*, exercises(name)').eq('client_id', session.user.id).order('log_date'),
     ]);
     setLogs(logRes.data || []);
+    setExerciseLogs(exLogRes.data || []);
 
     // Photos are in a private bucket — generate a temporary signed URL for each one.
     const withUrls = await Promise.all((photoRes.data || []).map(async (p) => {
@@ -91,6 +95,12 @@ export default function Progress() {
   const change60 = changeOverWindow(logs, 60);
   const change90 = changeOverWindow(logs, 90);
 
+  const exerciseNames = [...new Map(exerciseLogs.map((l) => [l.exercise_id, l.exercises?.name])).entries()];
+  const activeExercise = selectedExercise || exerciseNames[0]?.[0] || '';
+  const strengthData = exerciseLogs
+    .filter((l) => l.exercise_id === activeExercise)
+    .map((l) => ({ date: new Date(l.log_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }), weight: l.weight_kg }));
+
   return (
     <main className="dash">
       <aside className="dash-side">
@@ -109,6 +119,30 @@ export default function Progress() {
           <div><span>60-Day Change</span><b>{change60 !== null ? `${change60 > 0 ? '+' : ''}${change60} kg` : '—'}</b></div>
           <div><span>90-Day Change</span><b>{change90 !== null ? `${change90 > 0 ? '+' : ''}${change90} kg` : '—'}</b></div>
           <div><span>Total Logs</span><b>{logs.length}</b></div>
+        </div>
+
+        <div className="widget" style={{ marginBottom: 20 }}>
+          <h3>Strength Progression</h3>
+          {exerciseNames.length ? (
+            <>
+              <select value={activeExercise} onChange={(e) => setSelectedExercise(e.target.value)} style={{ marginBottom: 14, padding: 10, borderRadius: 8, border: '1px solid var(--line)', background: 'var(--panel)', color: '#fff' }}>
+                {exerciseNames.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+              </select>
+              {strengthData.length >= 2 ? (
+                <div style={{ width: '100%', height: 220 }}>
+                  <ResponsiveContainer>
+                    <LineChart data={strengthData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
+                      <XAxis dataKey="date" stroke="#666" fontSize={11} />
+                      <YAxis stroke="#666" fontSize={11} domain={['dataMin - 2', 'dataMax + 2']} />
+                      <Tooltip contentStyle={{ background: '#0a0a0a', border: '1px solid #232323' }} />
+                      <Line type="monotone" dataKey="weight" stroke="var(--success)" strokeWidth={2} dot={{ r: 3 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : <p className="muted">Log this exercise at least twice (via "Log Workout") to see progression.</p>}
+            </>
+          ) : <p className="muted">No exercises logged yet — complete a workout under "Log Workout" to start tracking strength.</p>}
         </div>
 
         <div className="widget" style={{ marginBottom: 20 }}>
