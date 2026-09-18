@@ -20,9 +20,19 @@ export default async function handler(req, res) {
   const ids = items.map((i) => i.product_id);
   const { data: products, error } = await admin
     .from('products')
-    .select('id,name,price')
+    .select('id,name,price,stock')
     .in('id', ids);
   if (error) return res.status(500).json({ error: error.message });
+
+  // Re-check stock server-side even though the shop page already checks it —
+  // someone could have bought the last unit between page-load and checkout.
+  for (const item of items) {
+    const p = products.find((p) => p.id === item.product_id);
+    if (!p) return res.status(400).json({ error: 'Unknown product' });
+    if (item.quantity > p.stock) {
+      return res.status(400).json({ error: `Only ${p.stock} of "${p.name}" left in stock.` });
+    }
+  }
 
   // Prices are re-read from the database here, never trusted from the client,
   // so a tampered request body can't change what actually gets charged.

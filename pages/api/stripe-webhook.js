@@ -25,10 +25,31 @@ export default async function handler(req, res) {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     const admin = getSupabaseAdminClient();
-    await admin
+
+    const { data: order } = await admin
       .from('orders')
       .update({ status: 'Paid' })
-      .eq('stripe_session_id', session.id);
+      .eq('stripe_session_id', session.id)
+      .select()
+      .single();
+
+    if (order) {
+      // Stock only moves once here, when payment is actually confirmed —
+      // never at checkout-start, so an abandoned Stripe session can't
+      // wrongly reduce inventory.
+      const { data: items } = await admin
+        .from('order_items')
+        .select('product_id, quantity')
+        .eq('order_id', order.id);
+
+      for (const item of items || []) {
+        const { data: product } = await admin.from('products').select('stock').eq('id', item.product_id).single();
+        if (product) {
+          const newStock = Math.max(0, product.stock - item.quantity);
+          await admin.from('products').update({ stock: newStock }).eq('id', item.product_id);
+        }
+      }
+    }
   }
 
   res.status(200).json({ received: true });

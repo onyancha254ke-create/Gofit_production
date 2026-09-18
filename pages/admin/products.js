@@ -7,9 +7,10 @@ const money = (n) => '$' + Number(n).toFixed(2);
 export default function AdminProducts() {
   const supabase = getSupabaseBrowserClient();
   const [products, setProducts] = useState([]);
-  const [form, setForm] = useState({ name: '', category: 'Coffee', price: '', description: '' });
+  const [form, setForm] = useState({ name: '', category: 'Coffee', price: '', description: '', stock: '100' });
   const [file, setFile] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [stockEdits, setStockEdits] = useState({}); // { productId: newStockValue }
 
   async function load() {
     const { data } = await supabase.from('products').select('*').order('created_at', { ascending: false });
@@ -24,9 +25,6 @@ export default function AdminProducts() {
 
     if (file) {
       const path = `${Date.now()}-${file.name}`;
-      // Uploads straight to cloud storage under the admin's authenticated
-      // session — the 'product-images' bucket's storage policy (set in the
-      // Supabase dashboard) only allows writes from role = 'admin'.
       const { error: upErr } = await supabase.storage.from('product-images').upload(path, file);
       if (upErr) { setSaving(false); return alert(upErr.message); }
       const { data } = supabase.storage.from('product-images').getPublicUrl(path);
@@ -38,11 +36,12 @@ export default function AdminProducts() {
       category: form.category,
       price: Number(form.price),
       description: form.description,
+      stock: Number(form.stock) || 0,
       image_url,
     });
     setSaving(false);
     if (error) return alert(error.message);
-    setForm({ name: '', category: 'Coffee', price: '', description: '' });
+    setForm({ name: '', category: 'Coffee', price: '', description: '', stock: '100' });
     setFile(null);
     load();
   }
@@ -50,6 +49,15 @@ export default function AdminProducts() {
   async function deleteProduct(id) {
     if (!confirm('Delete this product?')) return;
     await supabase.from('products').delete().eq('id', id);
+    load();
+  }
+
+  async function saveStock(id) {
+    const value = stockEdits[id];
+    if (value === undefined || value === '') return;
+    const { error } = await supabase.from('products').update({ stock: Number(value) }).eq('id', id);
+    if (error) return alert(error.message);
+    setStockEdits((prev) => { const next = { ...prev }; delete next[id]; return next; });
     load();
   }
 
@@ -70,6 +78,9 @@ export default function AdminProducts() {
             <input type="number" min="0.01" step="0.01" value={form.price}
               onChange={(e) => setForm({ ...form, price: e.target.value })} required />
           </label>
+          <label>Starting stock
+            <input type="number" min="0" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
+          </label>
           <label>Photo
             <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files[0])} />
           </label>
@@ -82,11 +93,28 @@ export default function AdminProducts() {
         </form>
       </div>
       <div className="panel">
-        <div className="panel-head"><h2>Products</h2></div>
+        <div className="panel-head"><h2>Products & Inventory</h2></div>
         {products.map((p) => (
           <div className="row" key={p.id}>
-            <div><b>{p.name}</b><small>{p.category} • {money(p.price)}</small></div>
-            <button className="mini danger" onClick={() => deleteProduct(p.id)}>Delete</button>
+            <div>
+              <b>{p.name}</b>
+              <small>
+                {p.category} • {money(p.price)}
+                {p.stock <= 0 && <span style={{ color: '#ff6b6b', fontWeight: 700 }}> · OUT OF STOCK</span>}
+                {p.stock > 0 && p.stock <= p.low_stock_threshold && <span style={{ color: '#f0b24b', fontWeight: 700 }}> · Low stock ({p.stock})</span>}
+              </small>
+            </div>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <input
+                type="number"
+                placeholder={String(p.stock)}
+                value={stockEdits[p.id] ?? ''}
+                onChange={(e) => setStockEdits((prev) => ({ ...prev, [p.id]: e.target.value }))}
+                style={{ width: 70, padding: 6, borderRadius: 6, border: '1px solid var(--line)', background: 'var(--panel2)', color: '#fff' }}
+              />
+              <button className="mini" onClick={() => saveStock(p.id)}>Update</button>
+              <button className="mini danger" onClick={() => deleteProduct(p.id)}>Delete</button>
+            </div>
           </div>
         ))}
       </div>

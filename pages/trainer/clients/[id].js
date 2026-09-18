@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { getSupabaseBrowserClient } from '../../../lib/supabaseClient';
 
 function daysAgo(n) {
@@ -80,6 +80,12 @@ export default function ClientDetail() {
   if (!client) return <main className="page"><p className="muted">Loading…</p></main>;
 
   const chartData = progress.map((l) => ({ date: new Date(l.log_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }), weight: l.weight_kg }));
+  const measurementsData = progress
+    .filter((l) => l.waist_cm || l.chest_cm || l.hips_cm || l.arm_cm)
+    .map((l) => ({
+      date: new Date(l.log_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+      waist: l.waist_cm, chest: l.chest_cm, hips: l.hips_cm, arm: l.arm_cm,
+    }));
   const change30 = changeOverWindow(progress, 30);
   const change60 = changeOverWindow(progress, 60);
   const change90 = changeOverWindow(progress, 90);
@@ -127,6 +133,27 @@ export default function ClientDetail() {
                   </ResponsiveContainer>
                 </div>
               ) : <p className="muted">Not enough logged weigh-ins yet for a graph.</p>}
+            </div>
+
+            <div className="widget">
+              <h3>Measurements Over Time</h3>
+              {measurementsData.length >= 2 ? (
+                <div style={{ width: '100%', height: 240 }}>
+                  <ResponsiveContainer>
+                    <LineChart data={measurementsData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
+                      <XAxis dataKey="date" stroke="#666" fontSize={11} />
+                      <YAxis stroke="#666" fontSize={11} />
+                      <Tooltip contentStyle={{ background: '#0a0a0a', border: '1px solid #232323' }} />
+                      <Legend wrapperStyle={{ fontSize: 11 }} />
+                      <Line type="monotone" dataKey="waist" name="Waist" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                      <Line type="monotone" dataKey="chest" name="Chest" stroke="#34d399" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                      <Line type="monotone" dataKey="hips" name="Hips" stroke="#f0b24b" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                      <Line type="monotone" dataKey="arm" name="Arm" stroke="#ff6b6b" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : <p className="muted">Needs at least 2 logged entries with measurements.</p>}
             </div>
 
             <div className="widget">

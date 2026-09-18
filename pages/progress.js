@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { getSupabaseBrowserClient } from '../lib/supabaseClient';
 
 function daysAgo(n) {
@@ -91,6 +91,12 @@ export default function Progress() {
   }
 
   const chartData = logs.map((l) => ({ date: new Date(l.log_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }), weight: l.weight_kg }));
+  const measurementsData = logs
+    .filter((l) => l.waist_cm || l.chest_cm || l.hips_cm || l.arm_cm)
+    .map((l) => ({
+      date: new Date(l.log_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+      waist: l.waist_cm, chest: l.chest_cm, hips: l.hips_cm, arm: l.arm_cm,
+    }));
   const change30 = changeOverWindow(logs, 30);
   const change60 = changeOverWindow(logs, 60);
   const change90 = changeOverWindow(logs, 90);
@@ -160,6 +166,27 @@ export default function Progress() {
               </ResponsiveContainer>
             </div>
           ) : <p className="muted">Log at least 2 weigh-ins to see your graph.</p>}
+        </div>
+
+        <div className="widget" style={{ marginBottom: 20 }}>
+          <h3>Measurements Over Time</h3>
+          {measurementsData.length >= 2 ? (
+            <div style={{ width: '100%', height: 260 }}>
+              <ResponsiveContainer>
+                <LineChart data={measurementsData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
+                  <XAxis dataKey="date" stroke="#666" fontSize={11} />
+                  <YAxis stroke="#666" fontSize={11} />
+                  <Tooltip contentStyle={{ background: '#0a0a0a', border: '1px solid #232323' }} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Line type="monotone" dataKey="waist" name="Waist" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                  <Line type="monotone" dataKey="chest" name="Chest" stroke="#34d399" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                  <Line type="monotone" dataKey="hips" name="Hips" stroke="#f0b24b" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                  <Line type="monotone" dataKey="arm" name="Arm" stroke="#ff6b6b" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          ) : <p className="muted">Log at least 2 entries with measurements to see this graph.</p>}
         </div>
 
         <div className="dash-grid">
