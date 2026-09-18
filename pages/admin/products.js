@@ -7,10 +7,11 @@ const money = (n) => '$' + Number(n).toFixed(2);
 export default function AdminProducts() {
   const supabase = getSupabaseBrowserClient();
   const [products, setProducts] = useState([]);
-  const [form, setForm] = useState({ name: '', category: 'Coffee', price: '', description: '', stock: '100' });
+  const [form, setForm] = useState({ name: '', category: 'Coffee', price: '', price_kes: '', description: '', stock: '100' });
   const [file, setFile] = useState(null);
   const [saving, setSaving] = useState(false);
   const [stockEdits, setStockEdits] = useState({}); // { productId: newStockValue }
+  const [kesEdits, setKesEdits] = useState({}); // { productId: newKesPriceValue }
 
   async function load() {
     const { data } = await supabase.from('products').select('*').order('created_at', { ascending: false });
@@ -35,13 +36,14 @@ export default function AdminProducts() {
       name: form.name,
       category: form.category,
       price: Number(form.price),
+      price_kes: form.price_kes ? Number(form.price_kes) : null,
       description: form.description,
       stock: Number(form.stock) || 0,
       image_url,
     });
     setSaving(false);
     if (error) return alert(error.message);
-    setForm({ name: '', category: 'Coffee', price: '', description: '', stock: '100' });
+    setForm({ name: '', category: 'Coffee', price: '', price_kes: '', description: '', stock: '100' });
     setFile(null);
     load();
   }
@@ -61,6 +63,15 @@ export default function AdminProducts() {
     load();
   }
 
+  async function saveKesPrice(id) {
+    const value = kesEdits[id];
+    if (value === undefined || value === '') return;
+    const { error } = await supabase.from('products').update({ price_kes: Number(value) }).eq('id', id);
+    if (error) return alert(error.message);
+    setKesEdits((prev) => { const next = { ...prev }; delete next[id]; return next; });
+    load();
+  }
+
   return (
     <AdminLayout active="products">
       <div className="panel">
@@ -77,6 +88,10 @@ export default function AdminProducts() {
           <label>Price (USD)
             <input type="number" min="0.01" step="0.01" value={form.price}
               onChange={(e) => setForm({ ...form, price: e.target.value })} required />
+          </label>
+          <label>Price (KES) — optional, enables M-Pesa
+            <input type="number" min="1" step="1" value={form.price_kes}
+              onChange={(e) => setForm({ ...form, price_kes: e.target.value })} placeholder="e.g. 2500" />
           </label>
           <label>Starting stock
             <input type="number" min="0" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
@@ -99,12 +114,20 @@ export default function AdminProducts() {
             <div>
               <b>{p.name}</b>
               <small>
-                {p.category} • {money(p.price)}
+                {p.category} • {money(p.price)} {p.price_kes ? `· KSh ${Number(p.price_kes).toLocaleString()}` : '· no KES price'}
                 {p.stock <= 0 && <span style={{ color: '#ff6b6b', fontWeight: 700 }}> · OUT OF STOCK</span>}
                 {p.stock > 0 && p.stock <= p.low_stock_threshold && <span style={{ color: '#f0b24b', fontWeight: 700 }}> · Low stock ({p.stock})</span>}
               </small>
             </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <input
+                type="number"
+                placeholder="KES"
+                value={kesEdits[p.id] ?? ''}
+                onChange={(e) => setKesEdits((prev) => ({ ...prev, [p.id]: e.target.value }))}
+                style={{ width: 80, padding: 6, borderRadius: 6, border: '1px solid var(--line)', background: 'var(--panel2)', color: '#fff' }}
+              />
+              <button className="mini" onClick={() => saveKesPrice(p.id)}>Set KES</button>
               <input
                 type="number"
                 placeholder={String(p.stock)}

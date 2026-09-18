@@ -8,8 +8,10 @@ const tabs = [
   { key: 'availability', label: 'Availability', href: '/admin/availability' },
   { key: 'bookings', label: 'Bookings', href: '/admin/bookings' },
   { key: 'orders', label: 'Orders', href: '/admin/orders' },
-  { key: 'analytics', label: 'Analytics', href: '/admin/analytics' },
+  { key: 'analytics', label: 'Revenue', href: '/admin/analytics' },
   { key: 'subscriptions', label: 'Subscriptions', href: '/admin/subscriptions' },
+  { key: 'users', label: 'Manage Users', href: '/admin/users' },
+  { key: 'platform', label: 'Platform Analytics', href: '/admin/platform' },
 ];
 
 export default function AdminLayout({ active, children }) {
