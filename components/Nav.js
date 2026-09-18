@@ -6,11 +6,21 @@ import { useCart } from '../lib/cartContext';
 export default function Nav() {
   const supabase = getSupabaseBrowserClient();
   const [session, setSession] = useState(null);
+  const [role, setRole] = useState(null);
   const { count } = useCart();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+    async function loadRole(s) {
+      setSession(s);
+      if (s) {
+        const { data } = await supabase.from('profiles').select('role').eq('id', s.user.id).single();
+        setRole(data?.role || null);
+      } else {
+        setRole(null);
+      }
+    }
+    supabase.auth.getSession().then(({ data }) => loadRole(data.session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => loadRole(s));
     return () => sub.subscription.unsubscribe();
   }, []);
 
@@ -25,7 +35,9 @@ export default function Nav() {
       <div className="nav-right">
         <Link href="/cart" className="cartbtn">Cart{count > 0 && <b>{count}</b>}</Link>
         <Link href={session ? '/account' : '/login'}>{session ? 'Account' : 'Login'}</Link>
-        {session && <Link className="adminlink" href="/admin">Admin</Link>}
+        {role === 'client' && <Link className="adminlink" href="/dashboard">Dashboard</Link>}
+        {(role === 'trainer' || role === 'admin') && <Link className="adminlink" href="/trainer">Trainer</Link>}
+        {role === 'admin' && <Link className="adminlink" href="/admin">Admin</Link>}
       </div>
     </header>
   );
