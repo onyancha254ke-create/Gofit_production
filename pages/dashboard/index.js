@@ -62,6 +62,7 @@ export default function ClientDashboard() {
       <aside className="dash-side">
         <p className="eyebrow" style={{ marginBottom: 20 }}>MY GOFIT</p>
         <button className="on">Dashboard</button>
+        <Link href="/progress">Progress</Link>
         <Link href="/booking">Book a Session</Link>
         <Link href="/shop">Shop</Link>
         <Link href="/account">Account</Link>
@@ -126,6 +127,7 @@ export default function ClientDashboard() {
                   <p className="muted" style={{ fontSize: 12 }}>{new Date(progress.log_date).toLocaleDateString()}</p>
                 </>
               ) : <p className="muted">No progress logged yet.</p>}
+              <Link href="/progress" style={{ color: 'var(--accent)', fontSize: 12, fontWeight: 600 }}>Log progress / view graph →</Link>
             </div>
 
             <div className="widget">

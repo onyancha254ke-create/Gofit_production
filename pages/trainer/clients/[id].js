@@ -1,7 +1,24 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { getSupabaseBrowserClient } from '../../../lib/supabaseClient';
+
+function daysAgo(n) {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d;
+}
+
+function changeOverWindow(logs, days) {
+  const cutoff = daysAgo(days);
+  const inWindow = logs.filter((l) => new Date(l.log_date) >= cutoff);
+  if (inWindow.length < 2) return null;
+  const sorted = [...inWindow].sort((a, b) => new Date(a.log_date) - new Date(b.log_date));
+  const first = sorted[0];
+  const last = sorted[sorted.length - 1];
+  return (last.weight_kg - first.weight_kg).toFixed(1);
+}
 
 export default function ClientDetail() {
   const supabase = getSupabaseBrowserClient();
@@ -10,19 +27,31 @@ export default function ClientDetail() {
   const [client, setClient] = useState(null);
   const [progress, setProgress] = useState([]);
   const [photos, setPhotos] = useState([]);
+  const [workoutStats, setWorkoutStats] = useState(null);
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
 
   async function load() {
     if (!id) return;
-    const [profileRes, progressRes, photoRes] = await Promise.all([
+    const [profileRes, progressRes, photoRes, workoutsRes] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', id).single(),
-      supabase.from('progress_logs').select('*').eq('client_id', id).order('log_date', { ascending: false }).limit(10),
-      supabase.from('transformation_photos').select('*').eq('client_id', id).order('taken_date', { ascending: false }).limit(6),
+      supabase.from('progress_logs').select('*').eq('client_id', id).order('log_date'),
+      supabase.from('transformation_photos').select('*').eq('client_id', id).order('taken_date', { ascending: false }).limit(9),
+      supabase.from('client_workouts').select('scheduled_date, completed').eq('client_id', id),
     ]);
     setClient(profileRes.data);
     setProgress(progressRes.data || []);
-    setPhotos(photoRes.data || []);
+
+    // Transformation photos live in a private bucket — sign each URL for this viewer.
+    const withUrls = await Promise.all((photoRes.data || []).map(async (p) => {
+      const { data } = await supabase.storage.from('transformation-photos').createSignedUrl(p.photo_url, 3600);
+      return { ...p, signedUrl: data?.signedUrl };
+    }));
+    setPhotos(withUrls);
+
+    const rows = workoutsRes.data || [];
+    const done = rows.filter((r) => r.completed).length;
+    setWorkoutStats({ done, total: rows.length, rate: rows.length ? Math.round((done / rows.length) * 100) : 0 });
   }
   useEffect(() => { load(); }, [id]);
 
@@ -40,9 +69,10 @@ export default function ClientDetail() {
 
   if (!client) return <main className="page"><p className="muted">Loading…</p></main>;
 
-  const latest = progress[0];
-  const first = progress[progress.length - 1];
-  const weightChange = latest && first && latest.id !== first.id ? (latest.weight_kg - first.weight_kg).toFixed(1) : null;
+  const chartData = progress.map((l) => ({ date: new Date(l.log_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }), weight: l.weight_kg }));
+  const change30 = changeOverWindow(progress, 30);
+  const change60 = changeOverWindow(progress, 60);
+  const change90 = changeOverWindow(progress, 90);
 
   return (
     <main className="dash">
@@ -59,11 +89,35 @@ export default function ClientDetail() {
       <section className="dash-main">
         <div className="admin-head"><div><p className="eyebrow">CLIENT</p><h1>{client.full_name}</h1></div></div>
 
+        <div className="metric-grid" style={{ marginBottom: 20 }}>
+          <div><span>30-Day Change</span><b>{change30 !== null ? `${change30 > 0 ? '+' : ''}${change30} kg` : '—'}</b></div>
+          <div><span>60-Day Change</span><b>{change60 !== null ? `${change60 > 0 ? '+' : ''}${change60} kg` : '—'}</b></div>
+          <div><span>90-Day Change</span><b>{change90 !== null ? `${change90 > 0 ? '+' : ''}${change90} kg` : '—'}</b></div>
+          <div><span>Workout Rate</span><b>{workoutStats ? `${workoutStats.rate}%` : '—'}</b><small>{workoutStats ? `${workoutStats.done}/${workoutStats.total}` : ''}</small></div>
+        </div>
+
         <div className="dash-grid">
           <div style={{ display: 'grid', gap: 20 }}>
             <div className="widget">
+              <h3>Weight Over Time</h3>
+              {progress.length >= 2 ? (
+                <div style={{ width: '100%', height: 240 }}>
+                  <ResponsiveContainer>
+                    <LineChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
+                      <XAxis dataKey="date" stroke="#666" fontSize={11} />
+                      <YAxis stroke="#666" fontSize={11} domain={['dataMin - 2', 'dataMax + 2']} />
+                      <Tooltip contentStyle={{ background: '#0a0a0a', border: '1px solid #232323' }} />
+                      <Line type="monotone" dataKey="weight" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : <p className="muted">Not enough logged weigh-ins yet for a graph.</p>}
+            </div>
+
+            <div className="widget">
               <h3>Progress History</h3>
-              {progress.length ? progress.map((p) => (
+              {progress.length ? [...progress].reverse().slice(0, 10).map((p) => (
                 <div className="row" key={p.id}>
                   <div><b>{p.weight_kg} kg</b><small>{new Date(p.log_date).toLocaleDateString()}</small></div>
                   <small className="muted">
@@ -71,11 +125,6 @@ export default function ClientDetail() {
                   </small>
                 </div>
               )) : <p className="muted">No progress logged by this client yet.</p>}
-              {weightChange !== null && (
-                <p style={{ marginTop: 14 }}>
-                  Change over this period: <b style={{ color: weightChange < 0 ? 'var(--success)' : 'var(--accent)' }}>{weightChange > 0 ? '+' : ''}{weightChange} kg</b>
-                </p>
-              )}
             </div>
 
             <div className="widget">
@@ -83,7 +132,7 @@ export default function ClientDetail() {
               {photos.length ? (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
                   {photos.map((p) => (
-                    <img key={p.id} src={p.photo_url} alt={p.label || 'progress photo'} style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 10, border: '1px solid var(--line)' }} />
+                    p.signedUrl && <img key={p.id} src={p.signedUrl} alt={p.label || 'progress photo'} style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 10, border: '1px solid var(--line)' }} />
                   ))}
                 </div>
               ) : <p className="muted">No photos uploaded yet.</p>}
