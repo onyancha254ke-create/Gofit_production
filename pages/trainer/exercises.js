@@ -40,6 +40,7 @@ export default function ExerciseLibrary() {
         <Link href="/trainer/workout-builder">Workout Builder</Link>
         <button className="on">Exercise Library</button>
         <Link href="/trainer/meal-plans">Meal Plans</Link>
+        <Link href="/trainer/programs">Programs</Link>
         <Link href="/trainer/analytics">Progress Analytics</Link>
         <Link href="/trainer/messages">Messages</Link>
       </aside>

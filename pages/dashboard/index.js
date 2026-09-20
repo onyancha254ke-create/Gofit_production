@@ -34,7 +34,7 @@ export default function ClientDashboard() {
         supabase.from('client_meal_plans').select('*, meal_plans(title, daily_calories, protein_g, carbs_g, fat_g)').eq('client_id', uid).eq('active', true).maybeSingle(),
         supabase.from('progress_logs').select('*').eq('client_id', uid).order('log_date', { ascending: false }).limit(1).maybeSingle(),
         supabase.from('client_workouts').select('scheduled_date, completed').eq('client_id', uid).order('scheduled_date', { ascending: false }).limit(14),
-        supabase.from('bookings').select('*, availability(slot_date, slot_time)').eq('customer_id', uid).eq('status', 'Approved').order('created_at', { ascending: false }).limit(1).maybeSingle(),
+        supabase.from('bookings').select('*').eq('customer_id', uid).eq('status', 'Approved').order('created_at', { ascending: false }).limit(1).maybeSingle(),
         supabase.from('messages').select('*, profiles!messages_sender_id_fkey(full_name)').eq('recipient_id', uid).order('created_at', { ascending: false }).limit(3),
       ]);
 
@@ -140,8 +140,8 @@ export default function ClientDashboard() {
               <h3>Upcoming Session</h3>
               {booking ? (
                 <>
-                  <p style={{ fontWeight: 700 }}>{booking.availability?.slot_date}</p>
-                  <p className="muted">{booking.availability?.slot_time}</p>
+                  <p style={{ fontWeight: 700 }}>{booking.confirmed_date}</p>
+                  <p className="muted">{booking.confirmed_time}</p>
                 </>
               ) : <p className="muted">Nothing booked. <Link href="/booking" style={{ color: 'var(--accent)' }}>Book one →</Link></p>}
             </div>

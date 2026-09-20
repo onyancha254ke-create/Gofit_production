@@ -21,7 +21,7 @@ export default function Account() {
       const [profileRes, ordersRes, bookingsRes] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', session.user.id).single(),
         supabase.from('orders').select('*, order_items(quantity, unit_price, products(name))').eq('customer_id', session.user.id).order('created_at', { ascending: false }),
-        supabase.from('bookings').select('*, availability(slot_date, slot_time)').eq('customer_id', session.user.id).order('created_at', { ascending: false }),
+        supabase.from('bookings').select('*').eq('customer_id', session.user.id).order('created_at', { ascending: false }),
       ]);
       setProfile(profileRes.data);
       setOrders(ordersRes.data || []);
@@ -54,7 +54,14 @@ export default function Account() {
             <h2>Your Bookings</h2>
             {bookings.length ? bookings.map((b) => (
               <div className="row" key={b.id}>
-                <div><b>{b.program_id}</b><small>{b.availability?.slot_date} · {b.availability?.slot_time}</small></div>
+                <div>
+                  <b>{b.program_id}</b>
+                  <small>
+                    {b.status === 'Approved'
+                      ? `Confirmed: ${b.confirmed_date} · ${b.confirmed_time}`
+                      : `Requested: ${b.preferred_date} · ${b.preferred_time}`}
+                  </small>
+                </div>
                 <span className="status">{b.status}</span>
               </div>
             )) : <p className="muted">No bookings yet. <a href="/booking">Book a session →</a></p>}

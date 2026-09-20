@@ -1,16 +1,20 @@
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { getSupabaseBrowserClient } from '../lib/supabaseClient';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 
 const money = (n) => '$' + Number(n).toFixed(2);
 
-const programs = [
-  { id: 'tr1', title: '1:1 Personal Training', price: 80, unit: '/ session', copy: 'Individual coaching, custom programming and accountability.' },
-  { id: 'tr2', title: '4-Week Strength System', price: 39, unit: '', copy: 'Progressive training structure for building strength and confidence.' },
-  { id: 'tr3', title: 'Online Coaching', price: 120, unit: '/ month', copy: 'Remote programming, check-ins and ongoing progression.' },
-];
-
 export default function Training() {
+  const supabase = getSupabaseBrowserClient();
+  const [programs, setPrograms] = useState([]);
+
+  useEffect(() => {
+    supabase.from('programs').select('*').eq('active', true).order('created_at')
+      .then(({ data }) => setPrograms(data || []));
+  }, []);
+
   return (
     <>
       <Nav />
@@ -21,16 +25,17 @@ export default function Training() {
           <p>Choose a coaching path and book your first session.</p>
         </div>
         <div className="programs">
-          {programs.map((p) => (
+          {programs.map((p, i) => (
             <article className="program" key={p.id}>
-              <span>GOFIT / {p.id.toUpperCase()}</span>
+              <span>GOFIT / {String(i + 1).padStart(2, '0')}</span>
               <h2>{p.title}</h2>
-              <p>{p.copy}</p>
+              <p>{p.description}</p>
               <b>{money(p.price)} <small>{p.unit}</small></b>
-              <Link href={`/booking?program=${p.id}`} className="btn blue">Book / enquire →</Link>
+              <Link href="/booking" className="btn blue">Book / enquire →</Link>
             </article>
           ))}
         </div>
+        {!programs.length && <p className="muted">No programs available right now — check back soon.</p>}
       </main>
       <Footer />
     </>

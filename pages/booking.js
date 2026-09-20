@@ -4,44 +4,34 @@ import { getSupabaseBrowserClient } from '../lib/supabaseClient';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 
-const programs = [
-  { id: 'tr1', title: '1:1 Personal Training' },
-  { id: 'tr2', title: '4-Week Strength System' },
-  { id: 'tr3', title: 'Online Coaching' },
-];
-
 export default function Booking() {
   const supabase = getSupabaseBrowserClient();
   const router = useRouter();
-  const [slots, setSlots] = useState([]);
-  const [program, setProgram] = useState(programs[0].id);
-  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [programs, setPrograms] = useState([]);
+  const [program, setProgram] = useState('');
+  const [preferredDate, setPreferredDate] = useState('');
+  const [preferredTime, setPreferredTime] = useState('');
   const [note, setNote] = useState('');
   const [status, setStatus] = useState('');
 
   useEffect(() => {
-    supabase
-      .from('availability')
-      .select('*')
-      .eq('is_booked', false)
-      .gte('slot_date', new Date().toISOString().slice(0, 10))
-      .order('slot_date')
-      .order('slot_time')
-      .then(({ data }) => setSlots(data || []));
+    supabase.from('programs').select('*').eq('active', true).order('created_at')
+      .then(({ data }) => { setPrograms(data || []); if (data?.length) setProgram(data[0].title); });
   }, []);
 
   async function submit(e) {
     e.preventDefault();
-    setStatus('Booking…');
+    setStatus('Sending your request…');
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return router.push('/login?next=/booking');
 
-    // Calls the SQL function in schema.sql — it locks the row and fails
-    // cleanly if someone else grabbed the same slot a moment earlier.
-    const { error } = await supabase.rpc('create_booking', {
-      p_program_id: program,
-      p_availability_id: selectedSlot,
-      p_note: note,
+    const { error } = await supabase.from('bookings').insert({
+      customer_id: session.user.id,
+      program_id: program,
+      preferred_date: preferredDate,
+      preferred_time: preferredTime,
+      note,
+      status: 'Pending',
     });
     if (error) return setStatus(error.message);
     router.push('/account');
@@ -54,32 +44,33 @@ export default function Booking() {
         <div className="page-head">
           <p className="eyebrow">BOOKING</p>
           <h1>Reserve your<br /><em>GoFit session.</em></h1>
-          <p>Slots below come straight from the trainer's live calendar — once you book one, no one else can.</p>
+          <p>Pick a program and tell us your preferred date and time — your trainer will confirm it with you shortly after.</p>
         </div>
         <form className="form" onSubmit={submit}>
           <label>
             Program
-            <select value={program} onChange={(e) => setProgram(e.target.value)}>
+            <select value={program} onChange={(e) => setProgram(e.target.value)} required>
               {programs.map((p) => (
-                <option key={p.id} value={p.id}>{p.title}</option>
+                <option key={p.id} value={p.title}>{p.title}</option>
               ))}
             </select>
           </label>
-          <label>
-            Available slot
-            <select value={selectedSlot || ''} onChange={(e) => setSelectedSlot(e.target.value)} required>
-              <option value="" disabled>Choose a date & time</option>
-              {slots.map((s) => (
-                <option key={s.id} value={s.id}>{s.slot_date} — {s.slot_time}</option>
-              ))}
-            </select>
-          </label>
+          <div className="form-grid">
+            <label>
+              Preferred date
+              <input type="date" min={new Date().toISOString().slice(0, 10)} value={preferredDate} onChange={(e) => setPreferredDate(e.target.value)} required />
+            </label>
+            <label>
+              Preferred time
+              <input type="time" value={preferredTime} onChange={(e) => setPreferredTime(e.target.value)} required />
+            </label>
+          </div>
           <label>
             Goal / note
-            <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Tell the trainer what you want to achieve." />
+            <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Tell your trainer what you want to achieve, or any scheduling flexibility." />
           </label>
           {status && <p className="muted">{status}</p>}
-          <button className="btn blue" disabled={!selectedSlot}>Send booking request →</button>
+          <button className="btn blue">Send booking request →</button>
         </form>
       </main>
       <Footer />
