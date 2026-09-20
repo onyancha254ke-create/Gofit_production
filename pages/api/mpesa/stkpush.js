@@ -1,19 +1,20 @@
-import { createPagesServerClient } from '@supabase/auth-helpers-nextjs';
 import { getSupabaseAdminClient } from '../../../lib/supabaseAdmin';
 import { stkPush } from '../../../lib/mpesa';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  const supabase = createPagesServerClient(req, res);
-  const { data: { session: authSession } } = await supabase.auth.getSession();
-  if (!authSession) return res.status(401).json({ error: 'Sign in required' });
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return res.status(401).json({ error: 'Sign in required' });
+
+  const admin = getSupabaseAdminClient();
+  const { data: { user }, error: authError } = await admin.auth.getUser(token);
+  if (authError || !user) return res.status(401).json({ error: 'Sign in required' });
 
   const { items, phone } = req.body; // items: [{ product_id, quantity }]
   if (!Array.isArray(items) || !items.length) return res.status(400).json({ error: 'Cart is empty' });
   if (!phone || phone.replace(/\D/g, '').length < 9) return res.status(400).json({ error: 'Enter a valid M-Pesa phone number' });
 
-  const admin = getSupabaseAdminClient();
   const ids = items.map((i) => i.product_id);
   const { data: products, error } = await admin.from('products').select('id,name,price_kes,stock').in('id', ids);
   if (error) return res.status(500).json({ error: error.message });
@@ -32,7 +33,7 @@ export default async function handler(req, res) {
 
   const { data: order, error: orderErr } = await admin
     .from('orders')
-    .insert({ customer_id: authSession.user.id, total, currency: 'kes', customer_phone: phone, status: 'Pending' })
+    .insert({ customer_id: user.id, total, currency: 'kes', customer_phone: phone, status: 'Pending' })
     .select()
     .single();
   if (orderErr) return res.status(500).json({ error: orderErr.message });

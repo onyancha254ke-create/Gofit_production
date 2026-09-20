@@ -37,7 +37,7 @@ export default function Checkout() {
 
     const res = await fetch('/api/checkout', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
       body: JSON.stringify({ items: items.map((i) => ({ product_id: i.product_id, quantity: i.qty })) }),
     });
     const data = await res.json();
@@ -54,7 +54,7 @@ export default function Checkout() {
 
     const res = await fetch('/api/mpesa/stkpush', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
       body: JSON.stringify({ items: items.map((i) => ({ product_id: i.product_id, quantity: i.qty })), phone }),
     });
     const data = await res.json();

@@ -1,5 +1,4 @@
 import Stripe from 'stripe';
-import { createPagesServerClient } from '@supabase/auth-helpers-nextjs';
 import { getSupabaseAdminClient } from '../../lib/supabaseAdmin';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -7,16 +6,22 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  const supabase = createPagesServerClient(req, res);
-  const { data: { session: authSession } } = await supabase.auth.getSession();
-  if (!authSession) return res.status(401).json({ error: 'Sign in required' });
+  // The client sends its own access token explicitly (see lib/supabaseClient.js
+  // getAccessToken) instead of relying on a session cookie reaching this API
+  // route — cookie-based session sync between the browser and API routes
+  // proved unreliable in this deployment, so token-in-header is used instead.
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return res.status(401).json({ error: 'Sign in required' });
+
+  const admin = getSupabaseAdminClient();
+  const { data: { user }, error: authError } = await admin.auth.getUser(token);
+  if (authError || !user) return res.status(401).json({ error: 'Sign in required' });
 
   const { items } = req.body; // [{ product_id, quantity }]
   if (!Array.isArray(items) || !items.length) {
     return res.status(400).json({ error: 'Cart is empty' });
   }
 
-  const admin = getSupabaseAdminClient();
   const ids = items.map((i) => i.product_id);
   const { data: products, error } = await admin
     .from('products')
@@ -24,8 +29,6 @@ export default async function handler(req, res) {
     .in('id', ids);
   if (error) return res.status(500).json({ error: error.message });
 
-  // Re-check stock server-side even though the shop page already checks it —
-  // someone could have bought the last unit between page-load and checkout.
   for (const item of items) {
     const p = products.find((p) => p.id === item.product_id);
     if (!p) return res.status(400).json({ error: 'Unknown product' });
@@ -38,7 +41,6 @@ export default async function handler(req, res) {
   // so a tampered request body can't change what actually gets charged.
   const line_items = items.map((item) => {
     const p = products.find((p) => p.id === item.product_id);
-    if (!p) throw new Error('Unknown product');
     return {
       price_data: {
         currency: 'usd',
@@ -56,7 +58,7 @@ export default async function handler(req, res) {
 
   const { data: order, error: orderErr } = await admin
     .from('orders')
-    .insert({ customer_id: authSession.user.id, total, status: 'Pending' })
+    .insert({ customer_id: user.id, total, currency: 'usd', status: 'Pending' })
     .select()
     .single();
   if (orderErr) return res.status(500).json({ error: orderErr.message });
