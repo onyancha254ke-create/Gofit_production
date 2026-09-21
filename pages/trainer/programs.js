@@ -5,7 +5,8 @@ import { getSupabaseBrowserClient } from '../../lib/supabaseClient';
 export default function TrainerPrograms() {
   const supabase = getSupabaseBrowserClient();
   const [programs, setPrograms] = useState([]);
-  const [form, setForm] = useState({ title: '', price: '', unit: '', description: '' });
+  const [form, setForm] = useState({ title: '', price: '', unit: '', description: '', image_url: '' });
+  const [file, setFile] = useState(null);
   const [saving, setSaving] = useState(false);
 
   async function load() {
@@ -18,16 +19,28 @@ export default function TrainerPrograms() {
     e.preventDefault();
     setSaving(true);
     const { data: { session } } = await supabase.auth.getSession();
+
+    let image_url = null;
+    if (file) {
+      const path = `programs/${Date.now()}-${file.name}`;
+      const { error: upErr } = await supabase.storage.from('product-images').upload(path, file);
+      if (upErr) { setSaving(false); return alert(upErr.message); }
+      const { data } = supabase.storage.from('product-images').getPublicUrl(path);
+      image_url = data.publicUrl;
+    }
+
     const { error } = await supabase.from('programs').insert({
       title: form.title,
       price: Number(form.price),
       unit: form.unit,
       description: form.description,
+      image_url,
       created_by: session.user.id,
     });
     setSaving(false);
     if (error) return alert(error.message);
-    setForm({ title: '', price: '', unit: '', description: '' });
+    setForm({ title: '', price: '', unit: '', description: '', image_url: '' });
+    setFile(null);
     load();
   }
 
@@ -52,6 +65,7 @@ export default function TrainerPrograms() {
         <Link href="/trainer/exercises">Exercise Library</Link>
         <Link href="/trainer/meal-plans">Meal Plans</Link>
         <button className="on">Programs</button>
+        <Link href="/trainer/testimonials">Testimonials</Link>
         <Link href="/trainer/analytics">Progress Analytics</Link>
         <Link href="/trainer/messages">Messages</Link>
       </aside>
@@ -64,6 +78,7 @@ export default function TrainerPrograms() {
             <label>Title<input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required /></label>
             <label>Price (USD)<input type="number" min="0.01" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required /></label>
             <label>Unit (e.g. "/ session", "/ month", or leave blank)<input value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} /></label>
+            <label>Photo (optional)<input type="file" accept="image/*" onChange={(e) => setFile(e.target.files[0])} /></label>
             <label style={{ gridColumn: '1 / -1' }}>Description<textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
             <button className="btn blue" disabled={saving} style={{ gridColumn: '1 / -1' }}>{saving ? 'Saving…' : '＋ Add program'}</button>
           </form>

@@ -38,6 +38,7 @@ export default function TrainerDashboard() {
         <Link href="/trainer/exercises">Exercise Library</Link>
         <Link href="/trainer/meal-plans">Meal Plans</Link>
         <Link href="/trainer/programs">Programs</Link>
+        <Link href="/trainer/testimonials">Testimonials</Link>
         <Link href="/admin/bookings">Calendar</Link>
         <Link href="/trainer/analytics">Progress Analytics</Link>
         <Link href="/trainer/messages">Messages</Link>

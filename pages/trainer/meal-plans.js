@@ -79,6 +79,7 @@ export default function MealPlans() {
         <Link href="/trainer/exercises">Exercise Library</Link>
         <button className="on">Meal Plans</button>
         <Link href="/trainer/programs">Programs</Link>
+        <Link href="/trainer/testimonials">Testimonials</Link>
         <Link href="/trainer/analytics">Progress Analytics</Link>
         <Link href="/trainer/messages">Messages</Link>
       </aside>
