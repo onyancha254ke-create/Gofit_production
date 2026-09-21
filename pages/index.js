@@ -3,36 +3,45 @@ import Link from 'next/link';
 import { getSupabaseBrowserClient } from '../lib/supabaseClient';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
+import Icon, { Star } from '../components/Icon';
 
 const money = (n) => '$' + Number(n).toFixed(2);
 
 const FEATURES = [
-  { icon: '💪', title: 'Expert Coaching', copy: 'Certified, experienced fitness professional.' },
-  { icon: '🎯', title: 'Personalized Plans', copy: 'Tailored to your goals and fitness level.' },
-  { icon: '🥗', title: 'Nutrition Guidance', copy: 'Fuel your body for better results.' },
-  { icon: '💻', title: 'Online & In-Person', copy: 'Train from anywhere or at your side.' },
-  { icon: '📈', title: 'Real Results', copy: 'Progress you can measure, week over week.' },
+  { icon: 'dumbbell', title: 'Expert Coaching', copy: 'Certified & experienced fitness professional.' },
+  { icon: 'target', title: 'Personalized Plans', copy: 'Tailored to your goals, fitness level & lifestyle.' },
+  { icon: 'heart', title: 'Pain-Free Training', copy: 'Focused on long-term health and mobility.' },
+  { icon: 'apple', title: 'Nutrition Guidance', copy: 'Fuel your body for better results.' },
+  { icon: 'monitor', title: 'Online & In-Person', copy: 'Train from anywhere or at your side.' },
 ];
 
 const WHY = [
-  { icon: '🎯', title: 'Goal Focused', copy: 'We build plans around your unique goals.' },
-  { icon: '🤝', title: 'Personal Support', copy: "You're never alone on this journey." },
-  { icon: '📊', title: 'Sustainable Results', copy: 'No quick fixes. Just real, lasting change.' },
-  { icon: '🔄', title: 'Ongoing Coaching', copy: 'Plans evolve with you as you progress.' },
+  { icon: 'target', title: 'Goal Focused', copy: 'We build plans around your unique goals.' },
+  { icon: 'shield', title: 'Pain Solutions', copy: 'Help with common training-related pain.' },
+  { icon: 'chart', title: 'Sustainable Results', copy: 'No quick fixes. Just real, lasting change.' },
+  { icon: 'people', title: 'Ongoing Support', copy: "You're never alone on this journey." },
 ];
+
+function initials(name) {
+  return (name || '?').split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase();
+}
 
 export default function Home() {
   const supabase = getSupabaseBrowserClient();
   const [products, setProducts] = useState([]);
   const [programs, setPrograms] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
+  const [slide, setSlide] = useState(0);
 
   useEffect(() => {
     supabase.from('products').select('*').eq('active', true).limit(4).then(({ data }) => setProducts(data || []));
     supabase.from('programs').select('*').eq('active', true).order('created_at').then(({ data }) => setPrograms(data || []));
-    supabase.from('testimonials').select('*').eq('approved', true).order('created_at', { ascending: false }).limit(3)
+    supabase.from('testimonials').select('*').eq('approved', true).order('created_at', { ascending: false })
       .then(({ data }) => setTestimonials(data || []));
   }, []);
+
+  const visibleTestimonials = testimonials.length > 3 ? testimonials.slice(slide, slide + 3) : testimonials;
+  const canCycle = testimonials.length > 3;
 
   return (
     <>
@@ -42,17 +51,17 @@ export default function Home() {
       <section className="hero-full">
         <img className="hero-full-bg" src="/hero-trainer.jpg" alt="GoFit trainer" />
         <div className="hero-full-overlay" />
+        <div className="hero-caption">Train hard.<br />Live well.<span /></div>
         <div className="hero-full-content">
-          <p className="eyebrow">TRAIN • FUEL • ACHIEVE</p>
-          <h1 className="hero-wordmark">GoFit</h1>
-          <p className="lead">Personal training, premium coffee and nutrition built for people who move, build and never settle.</p>
+          <p className="eyebrow">STRONGER • HEALTHIER • YOU</p>
+          <h1 className="hero-wordmark">Real people.<br />Real progress.<br /><span style={{ color: 'var(--accent)' }}>GoFit Training.</span></h1>
+          <p className="lead">Personalized training, expert guidance, and sustainable habits to help you build a stronger body, a healthier mind, and a better you.</p>
           <div className="actions">
-            <a className="btn blue" href="/training">Get started →</a>
-            <a className="btn outline" href="/shop">Explore shop</a>
+            <a className="btn blue" href="/booking">Start Your Journey →</a>
+            <a className="btn outline" href="/training">Explore Programs</a>
           </div>
           <div className="hero-about">
             <p><strong>The trainer.</strong> Hands-on coaching built on real accountability — every plan is built around you, not a template.</p>
-            <p><strong>Our mission.</strong> Helping everyday people build strength, discipline and confidence through training, nutrition and community.</p>
           </div>
           <div className="social-row">
             <a href="https://x.com/onyanchah0254" aria-label="X (Twitter)" target="_blank" rel="noopener noreferrer">
@@ -75,45 +84,43 @@ export default function Home() {
       <section className="cards">
         {FEATURES.map((f) => (
           <article key={f.title}>
-            <span>{f.icon}</span>
+            <span><Icon name={f.icon} color="var(--accent)" /></span>
             <h3>{f.title}</h3>
             <p>{f.copy}</p>
           </article>
         ))}
       </section>
 
-      {/* PROGRAMS */}
+      {/* PROGRAMS (image tiles) */}
       <div className="section-title">
         <div>
-          <p className="eyebrow" style={{ color: 'var(--muted)' }}>OUR PROGRAMS</p>
+          <p className="eyebrow" style={{ color: 'var(--accent-ink)', opacity: .55 }}>OUR PROGRAMS</p>
           <h2>Built for<br />your goals.</h2>
+          <p className="muted" style={{ maxWidth: 420, marginTop: 10 }}>Whether you want to lose fat, build muscle, get stronger, or move pain-free — we've got you covered.</p>
         </div>
-        <Link href="/training">View all programs →</Link>
+        <Link href="/training">View All Programs →</Link>
       </div>
-      <div className="programs">
+      <div className="promo-cards">
         {programs.slice(0, 4).map((p) => (
-          <article className="program" key={p.id}>
-            {p.image_url ? (
-              <div className="art" style={{ height: 140, margin: '-26px -26px 16px' }}>
-                <img src={p.image_url} alt={p.title} />
-              </div>
-            ) : (
-              <div className="art" style={{ height: 140, margin: '-26px -26px 16px', background: 'var(--bg-dark)' }} />
-            )}
-            <span>PROGRAM</span>
-            <h2 style={{ marginTop: 10 }}>{p.title}</h2>
-            <p>{p.description}</p>
-            <b>{money(p.price)} <small>{p.unit}</small></b>
-            <Link href="/booking" className="btn blue full" style={{ textAlign: 'center' }}>Book / enquire →</Link>
-          </article>
+          <Link href="/booking" className="promo-card" key={p.id}>
+            {p.image_url ? <img src={p.image_url} alt={p.title} /> : <img src="/hero-trainer.jpg" alt={p.title} />}
+            <div className="promo-card-overlay">
+              <h3>{p.title}</h3>
+              <p>{p.description}</p>
+              <span className="promo-arrow"><Icon name="arrow" size={16} /></span>
+            </div>
+          </Link>
         ))}
         {!programs.length && <p className="muted">No programs published yet.</p>}
       </div>
 
-      {/* ABOUT (dark split) */}
+      {/* ABOUT (dark split with photo caption + stat row) */}
       <section className="coffee">
         <div className="split">
-          <img className="feature-img" src="/hero-trainer.jpg" alt="Coaching session" />
+          <div className="about-photo">
+            <img src="/hero-trainer.jpg" alt="Coaching session" />
+            <div className="about-caption">Your goals.<br />My mission.<span /></div>
+          </div>
           <div>
             <p className="eyebrow">ABOUT GOFIT</p>
             <h2>More than<br />just a workout.</h2>
@@ -121,32 +128,38 @@ export default function Home() {
               GoFit is built on the belief that fitness changes lives. We're here to help you overcome plateaus,
               get stronger, and achieve your goals with expert coaching, personalized support, and a results-driven approach.
             </p>
-            <div className="checks">
-              <span>👤 Men &amp; Women</span>
-              <span>📍 Kenya &amp; Online</span>
-              <span>🏆 Real Results</span>
+            <div className="stat-row">
+              <div className="stat-item"><Icon name="person" color="var(--accent)" size={22} /><span><b>Men &amp; Women</b><small>Above 30</small></span></div>
+              <div className="stat-item"><Icon name="pin" color="var(--accent)" size={22} /><span><b>Kenya</b><small>&amp; Online</small></span></div>
+              <div className="stat-item"><Icon name="calendar" color="var(--accent)" size={22} /><span><b>3+ Years</b><small>of Experience</small></span></div>
             </div>
-            <Link href="/training" className="btn blue" style={{ marginTop: 20, display: 'inline-block' }}>Learn more →</Link>
+            <Link href="/training" className="btn blue" style={{ marginTop: 24, display: 'inline-block' }}>Learn More About Me →</Link>
           </div>
         </div>
       </section>
 
-      {/* WHY CHOOSE US */}
+      {/* WHY CHOOSE US (icon list + photo quote card) */}
       <div className="section-title">
         <div>
-          <p className="eyebrow" style={{ color: 'var(--muted)' }}>WHY CHOOSE US</p>
+          <p className="eyebrow" style={{ color: 'var(--accent-ink)', opacity: .55 }}>WHY CHOOSE US</p>
           <h2>Your success is<br />our priority.</h2>
         </div>
       </div>
       <div className="quote">
-        <div className="quote-grid">
-          {WHY.map((w) => (
-            <div key={w.title}>
-              <div className="quote-icon">{w.icon}</div>
-              <p>{w.title}</p>
-              <small>{w.copy}</small>
-            </div>
-          ))}
+        <div className="why-grid">
+          <div className="quote-grid">
+            {WHY.map((w) => (
+              <div key={w.title}>
+                <div className="quote-icon"><Icon name={w.icon} /></div>
+                <p>{w.title}</p>
+                <small>{w.copy}</small>
+              </div>
+            ))}
+          </div>
+          <div className="photo-quote-card">
+            <img src="/hero-trainer.jpg" alt="" />
+            <blockquote>"Discipline today, results tomorrow."</blockquote>
+          </div>
         </div>
       </div>
 
@@ -155,7 +168,7 @@ export default function Home() {
         <section className="shop-preview">
           <div className="section-title" style={{ margin: '0 auto 32px' }}>
             <div>
-              <p className="eyebrow" style={{ color: 'var(--muted)' }}>SHOP</p>
+              <p className="eyebrow" style={{ color: 'var(--accent-ink)', opacity: .55 }}>SHOP</p>
               <h2>Coffee &amp;<br />nutrition.</h2>
             </div>
             <Link href="/shop">Shop all →</Link>
@@ -177,29 +190,59 @@ export default function Home() {
         </section>
       )}
 
-      {/* TESTIMONIALS */}
-      <div className="section-title">
-        <div>
-          <p className="eyebrow" style={{ color: 'var(--muted)' }}>REAL STORIES</p>
-          <h2>What our<br />clients say.</h2>
-        </div>
-      </div>
-      <div className="newsletter">
-        {testimonials.length ? testimonials.map((t) => (
-          <div className="msg-bubble" key={t.id}>
-            <p>"{t.quote}"</p>
-            <small>{t.client_name}</small>
+      {/* TESTIMONIALS (dark, avatar + stars, carousel) */}
+      <section className="testimonials-section">
+        <div className="testimonials-header">
+          <div>
+            <p className="eyebrow">REAL STORIES</p>
+            <h2>What our<br />clients say.</h2>
           </div>
-        )) : (
-          <p className="muted" style={{ gridColumn: '1 / -1' }}>No client testimonials published yet.</p>
-        )}
-      </div>
+          {canCycle && (
+            <div className="testimonial-nav">
+              <button aria-label="Previous" onClick={() => setSlide((s) => Math.max(0, s - 1))}><Icon name="chevronLeft" size={18} /></button>
+              <button aria-label="Next" onClick={() => setSlide((s) => Math.min(testimonials.length - 3, s + 1))}><Icon name="chevronRight" size={18} /></button>
+            </div>
+          )}
+        </div>
+        <div className="newsletter">
+          {visibleTestimonials.length ? visibleTestimonials.map((t) => (
+            <div className="msg-bubble" key={t.id}>
+              <div className="testimonial-top">
+                <div className="testimonial-avatar">
+                  {t.photo_url ? <img src={t.photo_url} alt={t.client_name} /> : initials(t.client_name)}
+                </div>
+                <div>
+                  <small style={{ margin: 0, color: '#fff' }}>{t.client_name}</small>
+                  {t.client_label && <div className="label">{t.client_label}</div>}
+                </div>
+              </div>
+              <p>"{t.quote}"</p>
+              <div className="testimonial-stars">
+                {[1, 2, 3, 4, 5].map((n) => <Star key={n} filled={n <= t.rating} />)}
+              </div>
+            </div>
+          )) : (
+            <p className="muted" style={{ gridColumn: '1 / -1', color: '#8a8f80' }}>No client testimonials published yet.</p>
+          )}
+        </div>
+      </section>
 
       {/* CTA BAND */}
       <section className="cta-band">
-        <p className="eyebrow">READY TO START?</p>
-        <h2>Let's build the stronger,<br />healthier you.</h2>
-        <Link href="/training" className="btn blue">Get started today →</Link>
+        <img className="cta-band-bg" src="/hero-trainer.jpg" alt="" />
+        <div className="cta-band-overlay" />
+        <div className="cta-band-inner">
+          <div>
+            <p className="eyebrow">READY TO START YOUR JOURNEY?</p>
+            <h2>Let's build the stronger,<br />healthier you.</h2>
+            <Link href="/booking" className="btn blue">Get Started Today →</Link>
+          </div>
+          <div className="cta-icons">
+            <div className="cta-icon-item"><div><Icon name="target" size={18} /></div><small>Personalized<br />Plans</small></div>
+            <div className="cta-icon-item"><div><Icon name="dumbbell" size={18} /></div><small>Expert<br />Coaching</small></div>
+            <div className="cta-icon-item"><div><Icon name="chart" size={18} /></div><small>Real<br />Results</small></div>
+          </div>
+        </div>
       </section>
 
       <Footer />
