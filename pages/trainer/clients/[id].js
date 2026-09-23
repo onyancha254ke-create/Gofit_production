@@ -126,10 +126,10 @@ export default function ClientDetail() {
                 <div style={{ width: '100%', height: 240 }}>
                   <ResponsiveContainer>
                     <LineChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e7e8e2" />
                       <XAxis dataKey="date" stroke="#666" fontSize={11} />
                       <YAxis stroke="#666" fontSize={11} domain={['dataMin - 2', 'dataMax + 2']} />
-                      <Tooltip contentStyle={{ background: '#0a0a0a', border: '1px solid #232323' }} />
+                      <Tooltip contentStyle={{ background: 'var(--bg)', border: '1px solid var(--line)' }} />
                       <Line type="monotone" dataKey="weight" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
                     </LineChart>
                   </ResponsiveContainer>
@@ -143,10 +143,10 @@ export default function ClientDetail() {
                 <div style={{ width: '100%', height: 240 }}>
                   <ResponsiveContainer>
                     <LineChart data={measurementsData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e7e8e2" />
                       <XAxis dataKey="date" stroke="#666" fontSize={11} />
                       <YAxis stroke="#666" fontSize={11} />
-                      <Tooltip contentStyle={{ background: '#0a0a0a', border: '1px solid #232323' }} />
+                      <Tooltip contentStyle={{ background: 'var(--bg)', border: '1px solid var(--line)' }} />
                       <Legend wrapperStyle={{ fontSize: 11 }} />
                       <Line type="monotone" dataKey="waist" name="Waist" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} connectNulls />
                       <Line type="monotone" dataKey="chest" name="Chest" stroke="#34d399" strokeWidth={2} dot={{ r: 3 }} connectNulls />
@@ -162,17 +162,17 @@ export default function ClientDetail() {
               <h3>Strength Progression</h3>
               {exerciseOptions.length ? (
                 <>
-                  <select value={selectedExercise} onChange={(e) => setSelectedExercise(e.target.value)} style={{ marginBottom: 14, padding: 10, borderRadius: 8, border: '1px solid var(--line)', background: 'var(--panel)', color: '#fff', width: '100%' }}>
+                  <select value={selectedExercise} onChange={(e) => setSelectedExercise(e.target.value)} style={{ marginBottom: 14, padding: 10, borderRadius: 8, border: '1px solid var(--line)', background: 'var(--panel)', color: 'var(--text)', width: '100%' }}>
                     {exerciseOptions.map((ex) => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
                   </select>
                   {strengthData.length >= 2 ? (
                     <div style={{ width: '100%', height: 220 }}>
                       <ResponsiveContainer>
                         <LineChart data={strengthData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e7e8e2" />
                           <XAxis dataKey="date" stroke="#666" fontSize={11} />
                           <YAxis stroke="#666" fontSize={11} domain={['dataMin - 5', 'dataMax + 5']} />
-                          <Tooltip contentStyle={{ background: '#0a0a0a', border: '1px solid #232323' }} />
+                          <Tooltip contentStyle={{ background: 'var(--bg)', border: '1px solid var(--line)' }} />
                           <Line type="monotone" dataKey="weight" stroke="#34d399" strokeWidth={2} dot={{ r: 3 }} />
                         </LineChart>
                       </ResponsiveContainer>

@@ -26,7 +26,7 @@ export default function AdminOverview() {
           <div><span>Revenue (paid)</span><b>${metrics.revenue.toFixed(2)}</b></div>
           <div><span>Orders</span><b>{metrics.orders}</b></div>
           <div><span>Bookings</span><b>{metrics.bookings}</b><small>{metrics.pending} pending</small></div>
-          <div><span>Status</span><b style={{ fontSize: 16, color: '#54ce91' }}>LIVE</b></div>
+          <div><span>Status</span><b style={{ fontSize: 16, color: 'var(--success-ink)' }}>LIVE</b></div>
         </div>
       ) : <p className="muted">Loading…</p>}
     </AdminLayout>

@@ -116,7 +116,7 @@ export default function AdminProducts() {
               <small>
                 {p.category} • {money(p.price)} {p.price_kes ? `· KSh ${Number(p.price_kes).toLocaleString()}` : '· no KES price'}
                 {p.stock <= 0 && <span style={{ color: '#ff6b6b', fontWeight: 700 }}> · OUT OF STOCK</span>}
-                {p.stock > 0 && p.stock <= p.low_stock_threshold && <span style={{ color: '#f0b24b', fontWeight: 700 }}> · Low stock ({p.stock})</span>}
+                {p.stock > 0 && p.stock <= p.low_stock_threshold && <span style={{ color: 'var(--warn-ink)', fontWeight: 700 }}> · Low stock ({p.stock})</span>}
               </small>
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -125,7 +125,7 @@ export default function AdminProducts() {
                 placeholder="KES"
                 value={kesEdits[p.id] ?? ''}
                 onChange={(e) => setKesEdits((prev) => ({ ...prev, [p.id]: e.target.value }))}
-                style={{ width: 80, padding: 6, borderRadius: 6, border: '1px solid var(--line)', background: 'var(--panel2)', color: '#fff' }}
+                style={{ width: 80, padding: 6, borderRadius: 6, border: '1px solid var(--line)', background: 'var(--panel)', color: 'var(--text)' }}
               />
               <button className="mini" onClick={() => saveKesPrice(p.id)}>Set KES</button>
               <input
@@ -133,7 +133,7 @@ export default function AdminProducts() {
                 placeholder={String(p.stock)}
                 value={stockEdits[p.id] ?? ''}
                 onChange={(e) => setStockEdits((prev) => ({ ...prev, [p.id]: e.target.value }))}
-                style={{ width: 70, padding: 6, borderRadius: 6, border: '1px solid var(--line)', background: 'var(--panel2)', color: '#fff' }}
+                style={{ width: 70, padding: 6, borderRadius: 6, border: '1px solid var(--line)', background: 'var(--panel)', color: 'var(--text)' }}
               />
               <button className="mini" onClick={() => saveStock(p.id)}>Update</button>
               <button className="mini danger" onClick={() => deleteProduct(p.id)}>Delete</button>

@@ -56,15 +56,15 @@ export default function AdminBookings() {
 
             {b.status === 'Pending' && (
               <div style={{ display: 'flex', gap: 8, alignItems: 'end', marginTop: 10, flexWrap: 'wrap' }}>
-                <label style={{ fontSize: 11, color: '#9ba6ac' }}>
+                <label style={{ fontSize: 11, color: 'var(--muted)' }}>
                   Confirm date
                   <input type="date" defaultValue={b.preferred_date || ''} onChange={(e) => updateEdit(b.id, 'date', e.target.value)}
-                    style={{ display: 'block', marginTop: 4, padding: 8, borderRadius: 6, border: '1px solid var(--line)', background: 'var(--panel2)', color: '#fff' }} />
+                    style={{ display: 'block', marginTop: 4, padding: 8, borderRadius: 6, border: '1px solid var(--line)', background: 'var(--panel)', color: 'var(--text)' }} />
                 </label>
-                <label style={{ fontSize: 11, color: '#9ba6ac' }}>
+                <label style={{ fontSize: 11, color: 'var(--muted)' }}>
                   Confirm time
                   <input type="time" defaultValue={b.preferred_time || ''} onChange={(e) => updateEdit(b.id, 'time', e.target.value)}
-                    style={{ display: 'block', marginTop: 4, padding: 8, borderRadius: 6, border: '1px solid var(--line)', background: 'var(--panel2)', color: '#fff' }} />
+                    style={{ display: 'block', marginTop: 4, padding: 8, borderRadius: 6, border: '1px solid var(--line)', background: 'var(--panel)', color: 'var(--text)' }} />
                 </label>
                 <button className="mini" onClick={() => approveAndConfirm(b)}>Approve & Confirm</button>
                 <button className="mini danger" onClick={() => decline(b.id)}>Decline</button>

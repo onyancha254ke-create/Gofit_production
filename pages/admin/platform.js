@@ -68,7 +68,7 @@ export default function PlatformAnalytics() {
                   <b>{t.name}</b>
                   <span className="muted" style={{ fontSize: 12 }}>{t.clientCount} client{t.clientCount === 1 ? '' : 's'} · {t.rate}% completion</span>
                 </div>
-                <div style={{ height: 8, background: '#1a1a1a', borderRadius: 99, overflow: 'hidden' }}>
+                <div style={{ height: 8, background: 'var(--panel)', borderRadius: 99, overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${t.rate}%`, background: 'var(--accent)', borderRadius: 99 }} />
                 </div>
               </div>

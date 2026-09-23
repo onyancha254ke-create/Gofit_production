@@ -25,7 +25,7 @@ export default function Cart() {
               const priceForCurrency = currency === 'kes' ? i.price_kes : i.price;
               return (
                 <div className="cart-row" key={i.product_id}>
-                  {i.image_url ? <img src={i.image_url} alt={i.name} /> : <div style={{ width: 65, height: 65, background: 'var(--panel2)', borderRadius: 8 }} />}
+                  {i.image_url ? <img src={i.image_url} alt={i.name} /> : <div style={{ width: 65, height: 65, background: 'var(--panel)', borderRadius: 8 }} />}
                   <div>
                     <b>{i.name}</b>
                     <small>{priceForCurrency ? `${money(priceForCurrency)} each` : `No ${currency.toUpperCase()} price set`}</small>

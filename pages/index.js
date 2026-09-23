@@ -206,7 +206,7 @@ export default function Home() {
         </div>
         <div className="newsletter">
           {visibleTestimonials.length ? visibleTestimonials.map((t) => (
-            <div className="msg-bubble" key={t.id}>
+            <div className="testimonial-card" key={t.id}>
               <div className="testimonial-top">
                 <div className="testimonial-avatar">
                   {t.photo_url ? <img src={t.photo_url} alt={t.client_name} /> : initials(t.client_name)}

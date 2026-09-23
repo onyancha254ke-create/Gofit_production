@@ -85,7 +85,7 @@ export default function AdminAvailability() {
               ))}
             </div>
           </label>
-          {error && <p style={{ color: '#ff7777', fontSize: 12, gridColumn: '1 / -1' }}>{error}</p>}
+          {error && <p style={{ color: '#c0392b', fontSize: 12, gridColumn: '1 / -1' }}>{error}</p>}
           <button className="btn blue" disabled={saving || !selectedTimes.length} style={{ gridColumn: '1 / -1' }}>
             {saving ? 'Adding…' : `＋ Add ${selectedTimes.length || ''} slot${selectedTimes.length === 1 ? '' : 's'}`.trim()}
           </button>
@@ -101,7 +101,7 @@ export default function AdminAvailability() {
               <div className="row" key={s.id}>
                 <div>
                   <b>{s.slot_time}</b>
-                  {s.is_booked && <small style={{ color: '#5bd49b' }}>Booked</small>}
+                  {s.is_booked && <small style={{ color: 'var(--success-ink)' }}>Booked</small>}
                 </div>
                 {!s.is_booked && (
                   <button className="mini danger" onClick={() => removeSlot(s.id, s.is_booked)}>Remove</button>

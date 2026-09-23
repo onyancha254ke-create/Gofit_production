@@ -61,10 +61,10 @@ export default function AdminAnalytics() {
           <div style={{ width: '100%', height: 260 }}>
             <ResponsiveContainer>
               <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e7e8e2" />
                 <XAxis dataKey="date" stroke="#666" fontSize={11} />
                 <YAxis stroke="#666" fontSize={11} tickFormatter={(v) => `$${v}`} />
-                <Tooltip contentStyle={{ background: '#0a0a0a', border: '1px solid #232323' }} formatter={(v) => money(v)} />
+                <Tooltip contentStyle={{ background: 'var(--bg)', border: '1px solid var(--line)' }} formatter={(v) => money(v)} />
                 <Line type="monotone" dataKey="revenue" stroke="var(--accent)" strokeWidth={2} dot={{ r: 3 }} />
               </LineChart>
             </ResponsiveContainer>

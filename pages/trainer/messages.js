@@ -62,14 +62,14 @@ export default function TrainerMessages() {
             <h3>Conversation</h3>
             <div style={{ maxHeight: 420, overflowY: 'auto', marginBottom: 16 }}>
               {thread.length ? thread.map((m) => (
-                <div key={m.id} className="msg-bubble" style={{ marginLeft: m.sender_id === myId ? '20%' : 0, background: m.sender_id === myId ? 'var(--accent)' : 'var(--panel2)', color: m.sender_id === myId ? '#fff' : 'inherit' }}>
+                <div key={m.id} className="msg-bubble" style={{ marginLeft: m.sender_id === myId ? '20%' : 0, background: m.sender_id === myId ? 'var(--accent)' : 'var(--bg)', color: m.sender_id === myId ? 'var(--accent-ink)' : 'inherit' }}>
                   {m.body}
-                  <small style={{ color: m.sender_id === myId ? '#ffffffcc' : 'var(--muted)' }}>{new Date(m.created_at).toLocaleString()}</small>
+                  <small style={{ color: m.sender_id === myId ? 'var(--accent-ink)' : 'var(--muted)', opacity: m.sender_id === myId ? .7 : 1 }}>{new Date(m.created_at).toLocaleString()}</small>
                 </div>
               )) : <p className="muted">No messages in this conversation yet.</p>}
             </div>
             <form onSubmit={send} style={{ display: 'flex', gap: 10 }}>
-              <input style={{ flex: 1, padding: 12, borderRadius: 8, border: '1px solid var(--line)', background: 'var(--panel)', color: '#fff' }} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Type a message…" />
+              <input style={{ flex: 1, padding: 12, borderRadius: 8, border: '1px solid var(--line)', background: 'var(--bg)', color: 'var(--text)' }} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Type a message…" />
               <button className="btn blue">Send</button>
             </form>
           </div>

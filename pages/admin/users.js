@@ -57,7 +57,7 @@ export default function ManageUsers() {
               <select
                 value={p.role}
                 onChange={(e) => changeRole(p.id, e.target.value)}
-                style={{ padding: 8, borderRadius: 6, border: '1px solid var(--line)', background: 'var(--panel2)', color: '#fff', textTransform: 'capitalize' }}
+                style={{ padding: 8, borderRadius: 6, border: '1px solid var(--line)', background: 'var(--panel)', color: 'var(--text)', textTransform: 'capitalize' }}
               >
                 {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
               </select>

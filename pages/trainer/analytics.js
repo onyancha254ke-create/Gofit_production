@@ -61,7 +61,7 @@ export default function TrainerAnalytics() {
                   <div className="row" style={{ border: 'none', padding: '0 0 6px' }}>
                     <b>{c.name}</b><span className="muted" style={{ fontSize: 12 }}>{c.done}/{c.total} sessions</span>
                   </div>
-                  <div style={{ height: 8, background: '#1a1a1a', borderRadius: 99, overflow: 'hidden' }}>
+                  <div style={{ height: 8, background: 'var(--panel)', borderRadius: 99, overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${c.rate}%`, background: 'var(--accent)', borderRadius: 99, transition: 'width .6s ease' }} />
                   </div>
                 </div>

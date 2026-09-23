@@ -10,7 +10,7 @@
   --line:#e7e8e2;--line-dark:#262b1e;
   --text:#0c0f0a;--text-invert:#ffffff;--muted:#5c6155;--muted-invert:#a9ad9f;
   --accent:#9be000; /* neon lime */ --accent-ink:#0c0f0a; /* text on top of accent */
-  --success:#34d399;
+  --success:#34d399;--success-ink:#1f8a5c;--warn-ink:#b8791f;
   --max:1240px;
 }
 *{box-sizing:border-box}
@@ -170,14 +170,19 @@ nav a:hover{opacity:.6}
 .testimonial-nav button{width:38px;height:38px;border-radius:999px;border:1px solid #333;background:transparent;color:#fff;display:flex;align-items:center;justify-content:center}
 .testimonial-nav button:hover{border-color:var(--accent);color:var(--accent)}
 .newsletter{max-width:var(--max);margin:0 auto;padding:0 30px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-.msg-bubble{background:#131611;border:1px solid #262b1e;border-radius:16px;padding:22px}
+.testimonial-card{background:#131611;border:1px solid #262b1e;border-radius:16px;padding:22px}
 .testimonial-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
 .testimonial-avatar{width:44px;height:44px;border-radius:999px;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;overflow:hidden}
 .testimonial-avatar img{width:100%;height:100%;object-fit:cover}
 .testimonial-stars{display:flex;gap:2px;margin-bottom:10px}
-.msg-bubble p{font-size:14px;color:#e6e6e0}
-.msg-bubble small{display:block;color:#8a8f80;margin-top:4px;font-weight:700}
-.msg-bubble .label{color:#6b7060;font-weight:500;font-size:12px}
+.testimonial-card p{font-size:14px;color:#e6e6e0}
+.testimonial-card small{display:block;color:#8a8f80;margin-top:4px;font-weight:700}
+.testimonial-card .label{color:#6b7060;font-weight:500;font-size:12px}
+
+/* msg-bubble: real dashboard/trainer messaging UI — light theme (Pass 2) */
+.msg-bubble{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px}
+.msg-bubble p{font-size:14px;color:var(--text)}
+.msg-bubble small{display:block;color:var(--muted);margin-top:4px;font-weight:700}
 
 /* ---------- CTA BAND ---------- */
 .cta-band{position:relative;color:#fff;padding:90px 30px;overflow:hidden}
@@ -250,36 +255,38 @@ footer div{display:flex;gap:24px;align-items:center}
    invisible in places until that's swept page-by-page. Treat this as
    a known, called-out gap rather than a silent inconsistency.
    ============================================================ */
-.admin{min-height:calc(100vh - 80px);display:grid;grid-template-columns:230px 1fr;background:#000;color:#f5f5f5}
-.admin-side{border-right:1px solid #232323;padding:35px 18px;background:#020202}
-.admin-side button,.admin-side>a{display:block;width:100%;text-align:left;background:none;border:0;color:#999;padding:11px 12px;border-radius:8px;margin:2px 0;font-weight:500;font-size:14px}
-.admin-side button.on,.admin-side button:hover{background:#111111;color:#fff}
-.admin-side>a{margin-top:40px;border-top:1px solid #232323;padding-top:22px}
+.admin{min-height:calc(100vh - 80px);display:grid;grid-template-columns:230px 1fr;background:var(--bg);color:var(--text)}
+.admin-side{border-right:1px solid var(--line);padding:35px 18px;background:var(--bg)}
+.admin-side button,.admin-side>a{display:block;width:100%;text-align:left;background:none;border:0;color:var(--muted);padding:11px 12px;border-radius:8px;margin:2px 0;font-weight:500;font-size:14px}
+.admin-side button:hover{background:var(--panel)}
+.admin-side button.on{background:var(--accent);color:var(--accent-ink);font-weight:800}
+.admin-side>a{margin-top:40px;border-top:1px solid var(--line);padding-top:22px}
 .admin-main{padding:45px max(25px,5vw)}
 .admin-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:35px}
-.admin-head h1{font-size:34px;margin:6px 0;font-weight:800;color:#fff}
-.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-bottom:16px;background:#232323;border:1px solid #232323;border-radius:14px;overflow:hidden}
-.metric-grid>div{background:#0a0a0a;padding:22px}
-.metric-grid span,.metric-grid small{display:block;color:#8a8a8a;font-size:11px}
-.metric-grid b{display:block;font-size:28px;margin:10px 0;font-weight:800;color:#fff}
-.metric-grid small{color:#34d399}
+.admin-head h1{font-size:34px;margin:6px 0;font-weight:800;color:var(--text)}
+.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-bottom:16px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.metric-grid>div{background:var(--bg);padding:22px}
+.metric-grid span{display:block;color:var(--muted);font-size:11px}
+.metric-grid b{display:block;font-size:28px;margin:10px 0;font-weight:800;color:var(--text)}
+.metric-grid small{display:block;color:var(--success-ink);font-size:11px}
 .admin-two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .quick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.quick button{background:#0a0a0a;color:#fff;border:1px solid #232323;border-radius:10px;padding:18px;text-align:left;font-weight:500}
-.system span{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid #232323;font-size:13px;color:#f5f5f5}
-.system b{color:#34d399;font-size:10px}
-.system .warn{color:#f0b24b}
+.quick button{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:18px;text-align:left;font-weight:500}
+.system span{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--line);font-size:13px;color:var(--text)}
+.system b{color:var(--success-ink);font-size:10px}
+.system .warn{color:var(--warn-ink)}
 .panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 
-.dash{min-height:calc(100vh - 80px);display:grid;grid-template-columns:230px 1fr;background:#000;color:#f5f5f5}
-.dash-side{border-right:1px solid #232323;padding:35px 18px;background:#020202}
-.dash-side button,.dash-side a{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;color:#999;padding:11px 12px;border-radius:8px;margin:2px 0;font-weight:500;font-size:14px}
-.dash-side button.on,.dash-side button:hover,.dash-side a:hover{background:#111111;color:#fff}
+.dash{min-height:calc(100vh - 80px);display:grid;grid-template-columns:230px 1fr;background:var(--bg);color:var(--text)}
+.dash-side{border-right:1px solid var(--line);padding:35px 18px;background:var(--bg)}
+.dash-side button,.dash-side a{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;color:var(--muted);padding:11px 12px;border-radius:8px;margin:2px 0;font-weight:500;font-size:14px}
+.dash-side button:hover,.dash-side a:hover{background:var(--panel)}
+.dash-side button.on{background:var(--accent);color:var(--accent-ink);font-weight:800}
 .dash-main{padding:45px max(25px,5vw)}
 .dash-grid{display:grid;grid-template-columns:2fr 1fr;gap:20px}
-.widget{background:#0a0a0a;border:1px solid #232323;border-radius:16px;padding:26px;color:#f5f5f5}
-.widget h3{font-size:14px;font-weight:700;color:#ccc;margin:0 0 18px;text-transform:uppercase;letter-spacing:.5px}
+.widget{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px;color:var(--text)}
+.widget h3{font-size:14px;font-weight:700;color:var(--muted);margin:0 0 18px;text-transform:uppercase;letter-spacing:.5px}
 .ring-wrap{display:flex;align-items:center;gap:22px}
 .ring-wrap svg{transform:rotate(-90deg)}
 .ring-track{stroke:#1e1e1e}
